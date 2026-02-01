@@ -1,0 +1,615 @@
+
+PLAY [Deploy O-RAN SMO] ********************************************************
+
+TASK [Gathering Facts] *********************************************************
+ok: [smo-node-1]
+
+TASK [smo_deploy : Include pre-flight checks] **********************************
+included: /home/agnik/Desktop/deployoran/smo-install2/smo-install-ansible/roles/smo_deploy/tasks/preflight.yml for smo-node-1
+
+TASK [smo_deploy : Check if running as root or with sudo] **********************
+[WARNING]: Deprecation warnings can be disabled by setting `deprecation_warnings=False` in ansible.cfg.
+[DEPRECATION WARNING]: INJECT_FACTS_AS_VARS default to `True` is deprecated, top-level facts will not be auto injected after the change. This feature will be removed from ansible-core version 2.24.
+Origin: /home/agnik/Desktop/deployoran/smo-install2/smo-install-ansible/roles/smo_deploy/tasks/preflight.yml:7:9
+
+5   fail:
+6     msg: "This role must be run with root privileges or sudo"
+7   when: ansible_user_uid != 0 and ansible_env.SUDO_USER is not defined
+          ^ column 9
+
+Use `ansible_facts["fact_name"]` (no `ansible_` prefix) instead.
+
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Gather system facts] ****************************************
+ok: [smo-node-1]
+
+TASK [smo_deploy : Check CPU cores] ********************************************
+[DEPRECATION WARNING]: INJECT_FACTS_AS_VARS default to `True` is deprecated, top-level facts will not be auto injected after the change. This feature will be removed from ansible-core version 2.24.
+Origin: /home/agnik/Desktop/deployoran/smo-install2/smo-install-ansible/roles/smo_deploy/tasks/preflight.yml:20:9
+
+18   fail:
+19     msg: "Insufficient CPU cores. Required: {{ min_cpu_cores }}, Available: {{ ansible_processor_vcpus }}"
+20   when: ansible_processor_vcpus < min_cpu_cores
+           ^ column 9
+
+Use `ansible_facts["fact_name"]` (no `ansible_` prefix) instead.
+
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Check memory] ***********************************************
+[DEPRECATION WARNING]: INJECT_FACTS_AS_VARS default to `True` is deprecated, top-level facts will not be auto injected after the change. This feature will be removed from ansible-core version 2.24.
+Origin: /home/agnik/Desktop/deployoran/smo-install2/smo-install-ansible/roles/smo_deploy/tasks/preflight.yml:26:9
+
+24   fail:
+25     msg: "Insufficient memory. Required: {{ min_memory_gb }}GB, Available: {{ (ansible_memtotal_mb / 1024) | round...
+26   when: (ansible_memtotal_mb / 1024) < min_memory_gb
+           ^ column 9
+
+Use `ansible_facts["fact_name"]` (no `ansible_` prefix) instead.
+
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Check disk space] *******************************************
+ok: [smo-node-1]
+
+TASK [smo_deploy : Verify disk space] ******************************************
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Install required packages] **********************************
+[DEPRECATION WARNING]: INJECT_FACTS_AS_VARS default to `True` is deprecated, top-level facts will not be auto injected after the change. This feature will be removed from ansible-core version 2.24.
+Origin: /home/agnik/Desktop/deployoran/smo-install2/smo-install-ansible/roles/smo_deploy/tasks/preflight.yml:52:9
+
+50     state: present
+51     update_cache: yes
+52   when: ansible_os_family == "Debian"
+           ^ column 9
+
+Use `ansible_facts["fact_name"]` (no `ansible_` prefix) instead.
+
+ok: [smo-node-1]
+
+TASK [smo_deploy : Install required packages (RedHat)] *************************
+[DEPRECATION WARNING]: INJECT_FACTS_AS_VARS default to `True` is deprecated, top-level facts will not be auto injected after the change. This feature will be removed from ansible-core version 2.24.
+Origin: /home/agnik/Desktop/deployoran/smo-install2/smo-install-ansible/roles/smo_deploy/tasks/preflight.yml:65:9
+
+63       - python3-pip
+64     state: present
+65   when: ansible_os_family == "RedHat"
+           ^ column 9
+
+Use `ansible_facts["fact_name"]` (no `ansible_` prefix) instead.
+
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Install Python packages] ************************************
+ok: [smo-node-1]
+
+TASK [smo_deploy : Create deployment directory] ********************************
+ok: [smo-node-1]
+
+TASK [smo_deploy : Detect external IP if not provided] *************************
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Set external IP] ********************************************
+ok: [smo-node-1]
+
+TASK [smo_deploy : Display deployment configuration] ***************************
+ok: [smo-node-1] => {
+    "msg": [
+        "SMO Deployment Configuration:",
+        "Cluster Type: existing",
+        "Kubernetes Namespace: onap",
+        "External IP: 10.200.105.60",
+        "Deploy ONAP: True",
+        "Deploy Non-RT RIC: True",
+        "Deployment Flavor: default",
+        "Deployment Mode: release"
+    ]
+}
+
+TASK [smo_deploy : Include cluster deployment tasks] ***************************
+included: /home/agnik/Desktop/deployoran/smo-install2/smo-install-ansible/roles/smo_deploy/tasks/cluster.yml for smo-node-1
+
+TASK [smo_deploy : Clone or update it-dep repository] **************************
+ok: [smo-node-1]
+
+TASK [smo_deploy : Check if MicroK8s is already installed] *********************
+ok: [smo-node-1]
+
+TASK [smo_deploy : Install MicroK8s snap] **************************************
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Wait for MicroK8s to be ready] ******************************
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Add user to microk8s group] *********************************
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Change ownership of .kube directory] ************************
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Enable MicroK8s addons] *************************************
+skipping: [smo-node-1] => (item=dns) 
+skipping: [smo-node-1] => (item=storage) 
+skipping: [smo-node-1] => (item=ingress) 
+skipping: [smo-node-1] => (item=metallb:10.200.105.60-10.200.105.60) 
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Create kubectl alias] ***************************************
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Export kubeconfig] ******************************************
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Wait for all system pods to be ready] ***********************
+changed: [smo-node-1]
+
+TASK [smo_deploy : Create ONAP namespace] **************************************
+ok: [smo-node-1]
+
+TASK [smo_deploy : Display cluster status] *************************************
+ok: [smo-node-1]
+
+TASK [smo_deploy : Show cluster information] ***********************************
+ok: [smo-node-1] => {
+    "nodes_status.stdout_lines": [
+        "NAME        STATUS   ROLES           AGE   VERSION",
+        "nearrtric   Ready    control-plane   11d   v1.28.15"
+    ]
+}
+
+TASK [smo_deploy : Include Helm preparation tasks] *****************************
+included: /home/agnik/Desktop/deployoran/smo-install2/smo-install-ansible/roles/smo_deploy/tasks/helm_prep.yml for smo-node-1
+
+TASK [smo_deploy : Check if Helm is installed] *********************************
+ok: [smo-node-1]
+
+TASK [smo_deploy : Download Helm installation script] **************************
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Install Helm] ***********************************************
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Verify Helm installation] ***********************************
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Display Helm version] ***************************************
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Ensure Helm plugins directory exists] ***********************
+[DEPRECATION WARNING]: INJECT_FACTS_AS_VARS default to `True` is deprecated, top-level facts will not be auto injected after the change. This feature will be removed from ansible-core version 2.24.
+Origin: /home/agnik/Desktop/deployoran/smo-install2/smo-install-ansible/roles/smo_deploy/tasks/helm_prep.yml:40:15
+
+38     - name: Ensure Helm plugins directory exists
+39       file:
+40         path: "{{ ansible_env.HOME }}/.local/share/helm/plugins"
+                 ^ column 15
+
+Use `ansible_facts["fact_name"]` (no `ansible_` prefix) instead.
+
+ok: [smo-node-1]
+
+TASK [smo_deploy : Check if OOM repository has been cloned] ********************
+ok: [smo-node-1]
+
+TASK [smo_deploy : Clone OOM repository if not present] ************************
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Initialize OOM submodules for ONAP charts] ******************
+changed: [smo-node-1]
+
+TASK [smo_deploy : Check if deploy plugin already installed] *******************
+[DEPRECATION WARNING]: INJECT_FACTS_AS_VARS default to `True` is deprecated, top-level facts will not be auto injected after the change. This feature will be removed from ansible-core version 2.24.
+Origin: /home/agnik/Desktop/deployoran/smo-install2/smo-install-ansible/roles/smo_deploy/tasks/helm_prep.yml:70:15
+
+68     - name: Check if deploy plugin already installed
+69       stat:
+70         path: "{{ ansible_env.HOME }}/.local/share/helm/plugins/deploy"
+                 ^ column 15
+
+Use `ansible_facts["fact_name"]` (no `ansible_` prefix) instead.
+
+ok: [smo-node-1]
+
+TASK [smo_deploy : Install ONAP deploy plugin from OOM] ************************
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Check if undeploy plugin already installed] *****************
+[DEPRECATION WARNING]: INJECT_FACTS_AS_VARS default to `True` is deprecated, top-level facts will not be auto injected after the change. This feature will be removed from ansible-core version 2.24.
+Origin: /home/agnik/Desktop/deployoran/smo-install2/smo-install-ansible/roles/smo_deploy/tasks/helm_prep.yml:84:15
+
+82     - name: Check if undeploy plugin already installed
+83       stat:
+84         path: "{{ ansible_env.HOME }}/.local/share/helm/plugins/undeploy"
+                 ^ column 15
+
+Use `ansible_facts["fact_name"]` (no `ansible_` prefix) instead.
+
+ok: [smo-node-1]
+
+TASK [smo_deploy : Install ONAP undeploy plugin from OOM] **********************
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Verify custom Helm plugins are installed] *******************
+ok: [smo-node-1]
+
+TASK [smo_deploy : Display installed Helm plugins] *****************************
+ok: [smo-node-1] => {
+    "helm_plugins.stdout_lines": [
+        "NAME    \tVERSION\tDESCRIPTION                                                                                         ",
+        "deploy  \t1.0.0  \tinstall (upgrade if release exists) parent charty and all subcharts as separate but related releases",
+        "servecm \t0.1.0  \tStart a ChartMuseum web server                                                                      ",
+        "undeploy\t1.0.0  \tdelete parent chart and subcharts that were deployed as separate releases                           "
+    ]
+}
+
+TASK [smo_deploy : Verify deploy and undeploy plugins are present] *************
+ok: [smo-node-1] => {
+    "changed": false,
+    "msg": "ONAP custom Helm plugins successfully installed"
+}
+
+TASK [smo_deploy : Check if helm-push plugin is installed] *********************
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Install helm-push plugin] ***********************************
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Add upstream Helm repositories] *****************************
+changed: [smo-node-1]
+
+TASK [smo_deploy : Update Helm repositories] ***********************************
+changed: [smo-node-1]
+
+TASK [smo_deploy : List available charts from upstream] ************************
+ok: [smo-node-1]
+
+TASK [smo_deploy : Display available upstream charts] **************************
+ok: [smo-node-1] => {
+    "msg": "Using upstream Helm repositories. Charts available: 31345"
+}
+
+TASK [smo_deploy : Check if ChartMuseum is running] ****************************
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Create charts directory] ************************************
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Start ChartMuseum container] ********************************
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Wait for ChartMuseum to be ready] ***************************
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Add local ChartMuseum repository] ***************************
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Build ONAP charts from source] ******************************
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Package and upload ONAP charts to ChartMuseum] **************
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Build Non-RT RIC charts from source] ************************
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Package and upload Non-RT RIC charts to ChartMuseum] ********
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Update local Helm repository] *******************************
+skipping: [smo-node-1]
+
+TASK [smo_deploy : List available local charts] ********************************
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Display available local charts] *****************************
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Verify Helm setup] ******************************************
+ok: [smo-node-1]
+
+TASK [smo_deploy : Display configured Helm repositories] ***********************
+ok: [smo-node-1] => {
+    "msg": [
+        "Configured Helm repositories:",
+        [
+            "NAME            \tURL                                                  ",
+            "local           \thttp://127.0.0.1:8879/charts                         ",
+            "stable          \thttps://charts.helm.sh/stable                        ",
+            "bitnami         \thttps://charts.bitnami.com/bitnami                   ",
+            "strimzi         \thttps://strimzi.io/charts/                           ",
+            "onap            \thttps://nexus3.onap.org/repository/onap-helm-release/",
+            "oran            \thttps://nexus3.o-ran-sc.org/repository/helm.release/ ",
+            "openebs         \thttps://openebs.github.io/openebs                    ",
+            "mariadb-operator\thttps://helm.mariadb.com/mariadb-operator            "
+        ],
+        "ChartMuseum enabled: False",
+        "Custom Helm plugins installed: deploy, undeploy"
+    ]
+}
+
+TASK [smo_deploy : Include pre-configuration tasks] ****************************
+included: /home/agnik/Desktop/deployoran/smo-install2/smo-install-ansible/roles/smo_deploy/tasks/preconfigure.yml for smo-node-1
+
+TASK [smo_deploy : Create additional required namespaces] **********************
+ok: [smo-node-1] => (item=network)
+ok: [smo-node-1] => (item=network-simulators)
+
+TASK [smo_deploy : Create ONAP service account] ********************************
+ok: [smo-node-1]
+
+TASK [smo_deploy : Create NonRTRIC service account] ****************************
+ok: [smo-node-1]
+
+TASK [smo_deploy : Create cluster role for SMO components] *********************
+ok: [smo-node-1]
+
+TASK [smo_deploy : Bind cluster role to service accounts] **********************
+ok: [smo-node-1] => (item=onap-sa)
+ok: [smo-node-1] => (item=nonrtric-sa)
+
+TASK [smo_deploy : Create ONAP credentials secret] *****************************
+changed: [smo-node-1]
+
+TASK [smo_deploy : Create NonRTRIC credentials secret (if needed)] *************
+changed: [smo-node-1]
+
+TASK [smo_deploy : Create MariaDB root password secret] ************************
+changed: [smo-node-1]
+
+TASK [smo_deploy : Ensure MicroK8s storage is enabled] *************************
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Create PVC for ONAP data (if needed)] ***********************
+ok: [smo-node-1]
+
+TASK [smo_deploy : Get all nodes] **********************************************
+ok: [smo-node-1]
+
+TASK [smo_deploy : Label nodes for SMO workloads] ******************************
+changed: [smo-node-1] => (item=nearrtric)
+
+TASK [smo_deploy : Install OpenEBS operator (required for storage)] ************
+changed: [smo-node-1]
+
+TASK [smo_deploy : Wait for OpenEBS Deployment to be created] ******************
+changed: [smo-node-1]
+
+TASK [smo_deploy : Patch OpenEBS to remove liveness probe] *********************
+changed: [smo-node-1]
+
+TASK [smo_deploy : Wait for OpenEBS Rollout] ***********************************
+changed: [smo-node-1]
+
+TASK [smo_deploy : Create MariaDB operator namespace] **************************
+changed: [smo-node-1]
+
+TASK [smo_deploy : Adopt existing MariaDB CRDs if they exist] ******************
+changed: [smo-node-1]
+
+TASK [smo_deploy : Install MariaDB operator CRDs] ******************************
+changed: [smo-node-1]
+
+TASK [smo_deploy : Install MariaDB operator] ***********************************
+changed: [smo-node-1]
+
+TASK [smo_deploy : Create SMO storage class (if not present)] ******************
+ok: [smo-node-1]
+
+TASK [smo_deploy : Install Strimzi Kafka Operator] *****************************
+changed: [smo-node-1]
+
+TASK [smo_deploy : Copy Policy KafkaUser wildcard fix] *************************
+ok: [smo-node-1]
+
+TASK [smo_deploy : Apply Policy KafkaUser wildcard fix] ************************
+ok: [smo-node-1]
+
+TASK [smo_deploy : Display pre-configuration summary] **************************
+ok: [smo-node-1] => {
+    "msg": [
+        "Pre-configuration completed:",
+        "Service Accounts: Created",
+        "RBAC: Configured",
+        "Secrets: Created",
+        "Storage: Configured",
+        "Infrastructure: OpenEBS, MariaDB, Strimzi"
+    ]
+}
+
+TASK [smo_deploy : Include image pre-pull tasks] *******************************
+included: /home/agnik/Desktop/deployoran/smo-install2/smo-install-ansible/roles/smo_deploy/tasks/prepull_images.yml for smo-node-1
+
+TASK [smo_deploy : Check if generate-image-list.sh script exists] **************
+ok: [smo-node-1]
+
+TASK [smo_deploy : Fail if image list script is missing] ***********************
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Make image list script executable] **************************
+ok: [smo-node-1]
+
+TASK [smo_deploy : Generate image list from Helm charts] ***********************
+ok: [smo-node-1]
+
+TASK [smo_deploy : Check if image list was created] ****************************
+ok: [smo-node-1]
+
+TASK [smo_deploy : Read generated image list] **********************************
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Parse image list] *******************************************
+ok: [smo-node-1]
+
+TASK [smo_deploy : Display number of images to pull] ***************************
+ok: [smo-node-1] => {
+    "msg": "Found 0 images to pre-pull"
+}
+
+TASK [smo_deploy : Create image pull directory for tracking] *******************
+ok: [smo-node-1]
+
+TASK [smo_deploy : Check already pulled images] ********************************
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Filter images that need to be pulled] ***********************
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Display images to download] *********************************
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Pull Docker images in parallel batches] *********************
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Wait for image pull tasks to complete] **********************
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Check for failed image pulls] *******************************
+ok: [smo-node-1]
+
+TASK [smo_deploy : Display failed images warning] ******************************
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Count successfully pulled images] ***************************
+ok: [smo-node-1]
+
+TASK [smo_deploy : Display pull summary] ***************************************
+ok: [smo-node-1] => {
+    "msg": [
+        "==========================================",
+        "Image Pre-pull Summary",
+        "==========================================",
+        "Total images identified: 0",
+        "Images already cached: 0",
+        "Images downloaded: 0",
+        "Failed pulls: 0",
+        "=========================================="
+    ]
+}
+
+TASK [smo_deploy : Verify critical images are present] *************************
+ok: [smo-node-1]
+
+TASK [smo_deploy : Warn if no critical images found] ***************************
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Save image pull report] *************************************
+[DEPRECATION WARNING]: INJECT_FACTS_AS_VARS default to `True` is deprecated, top-level facts will not be auto injected after the change. This feature will be removed from ansible-core version 2.24.
+Origin: /home/agnik/Desktop/deployoran/smo-install2/smo-install-ansible/roles/smo_deploy/tasks/prepull_images.yml:173:14
+
+171 - name: Save image pull report
+172   copy:
+173     content: |
+                 ^ column 14
+
+Use `ansible_facts["fact_name"]` (no `ansible_` prefix) instead.
+
+changed: [smo-node-1]
+
+TASK [smo_deploy : Include SMO installation tasks] *****************************
+included: /home/agnik/Desktop/deployoran/smo-install2/smo-install-ansible/roles/smo_deploy/tasks/install.yml for smo-node-1
+
+TASK [smo_deploy : Create post-renderer script directory] **********************
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Check if yq is installed] ***********************************
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Download and install yq] ************************************
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Verify yq installation] *************************************
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Display yq version] *****************************************
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Copy post-renderer script] **********************************
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Check if external mappings file exists] *********************
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Fail if file specified but doesn't exist] *******************
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Read mappings from file] ************************************
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Parse mappings from file] ***********************************
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Display file-based mappings count] **************************
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Combine inline and file-based mappings] *********************
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Use inline mappings only] ***********************************
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Generate post-renderer configuration] ***********************
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Display post-renderer configuration summary] ****************
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Determine override files based on flavor and custom settings] ***
+ok: [smo-node-1]
+
+TASK [smo_deploy : Check if flavor override files exist] ***********************
+ok: [smo-node-1] => (item=/opt/o-ran-sc/it-dep/smo-install/helm-override/default/onap-override.yaml)
+ok: [smo-node-1] => (item=/opt/o-ran-sc/it-dep/smo-install/helm-override/default/oran-override.yaml)
+
+TASK [smo_deploy : Display override file status] *******************************
+ok: [smo-node-1] => {
+    "msg": [
+        "Deployment Configuration:",
+        "Flavor: default",
+        "Mode: release",
+        "ONAP Override: /opt/o-ran-sc/it-dep/smo-install/helm-override/default/onap-override.yaml",
+        "Non-RT RIC Override: /opt/o-ran-sc/it-dep/smo-install/helm-override/default/oran-override.yaml",
+        "Using ChartMuseum: False",
+        "Post-Renderer: False"
+    ]
+}
+
+TASK [smo_deploy : Warn if override files are missing] *************************
+skipping: [smo-node-1] => (item={'changed': False, 'stat': {'exists': True, 'path': '/opt/o-ran-sc/it-dep/smo-install/helm-override/default/onap-override.yaml', 'mode': '0644', 'isdir': False, 'ischr': False, 'isblk': False, 'isreg': True, 'isfifo': False, 'islnk': False, 'issock': False, 'uid': 0, 'gid': 0, 'size': 6969, 'inode': 12190445, 'dev': 2066, 'nlink': 1, 'atime': 1769879428.826126, 'mtime': 1769612744.8552094, 'ctime': 1769612744.8552094, 'wusr': True, 'rusr': True, 'xusr': False, 'wgrp': False, 'rgrp': True, 'xgrp': False, 'woth': False, 'roth': True, 'xoth': False, 'isuid': False, 'isgid': False, 'blocks': 16, 'block_size': 4096, 'device_type': 0, 'readable': True, 'writeable': True, 'executable': False, 'pw_name': 'root', 'gr_name': 'root', 'checksum': 'a50565bdbc6be41ed0c4b6968127072c0e4dda7c', 'mimetype': 'text/plain', 'charset': 'utf-8', 'version': '1776270379', 'attributes': ['extents'], 'attr_flags': 'e'}, 'invocation': {'module_args': {'path': '/opt/o-ran-sc/it-dep/smo-install/helm-override/default/onap-override.yaml', 'follow': False, 'get_checksum': True, 'get_mime': True, 'get_attributes': True, 'get_selinux_context': False, 'checksum_algorithm': 'sha1'}}, 'failed': False, 'item': '/opt/o-ran-sc/it-dep/smo-install/helm-override/default/onap-override.yaml', 'ansible_loop_var': 'item'}) 
+skipping: [smo-node-1] => (item={'changed': False, 'stat': {'exists': True, 'path': '/opt/o-ran-sc/it-dep/smo-install/helm-override/default/oran-override.yaml', 'mode': '0644', 'isdir': False, 'ischr': False, 'isblk': False, 'isreg': True, 'isfifo': False, 'islnk': False, 'issock': False, 'uid': 0, 'gid': 0, 'size': 6161, 'inode': 12190446, 'dev': 2066, 'nlink': 1, 'atime': 1769879445.4382613, 'mtime': 1769612744.8592093, 'ctime': 1769612744.8592093, 'wusr': True, 'rusr': True, 'xusr': False, 'wgrp': False, 'rgrp': True, 'xgrp': False, 'woth': False, 'roth': True, 'xoth': False, 'isuid': False, 'isgid': False, 'blocks': 16, 'block_size': 4096, 'device_type': 0, 'readable': True, 'writeable': True, 'executable': False, 'pw_name': 'root', 'gr_name': 'root', 'checksum': 'a739d903501e1f2d8dd01fc2da808634c34aada8', 'mimetype': 'text/plain', 'charset': 'utf-8', 'version': '1333629268', 'attributes': ['extents'], 'attr_flags': 'e'}, 'invocation': {'module_args': {'path': '/opt/o-ran-sc/it-dep/smo-install/helm-override/default/oran-override.yaml', 'follow': False, 'get_checksum': True, 'get_mime': True, 'get_attributes': True, 'get_selinux_context': False, 'checksum_algorithm': 'sha1'}}, 'failed': False, 'item': '/opt/o-ran-sc/it-dep/smo-install/helm-override/default/oran-override.yaml', 'ansible_loop_var': 'item'}) 
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Check if SMO is already deployed] ***************************
+ok: [smo-node-1]
+
+TASK [smo_deploy : Remove existing Helm releases] ******************************
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Wait for pods to terminate] *********************************
+skipping: [smo-node-1]
+
+TASK [smo_deploy : Set Helm repository based on mode] **************************
+ok: [smo-node-1]
+
+TASK [smo_deploy : Deploy ONAP components] *************************************
+changed: [smo-node-1]
+
+TASK [smo_deploy : Wait for ONAP deployments to stabilize] *********************
+Pausing for 60 seconds
+ok: [smo-node-1]
+
+TASK [smo_deploy : Deploy Non-RT RIC] ******************************************
+[ERROR]: Task failed: Module failed: non-zero return code
+Origin: /home/agnik/Desktop/deployoran/smo-install2/smo-install-ansible/roles/smo_deploy/tasks/install.yml:216:3
+
+214   tags: install
+215
+216 - name: Deploy Non-RT RIC
+      ^ column 3
+
+fatal: [smo-node-1]: FAILED! => {"changed": true, "cmd": "helm install nonrtric oran/nonrtric   --namespace onap    --values /opt/o-ran-sc/it-dep/smo-install/helm-override/default/oran-override.yaml      --timeout 3600s  --wait\n", "delta": "0:00:01.593258", "end": "2026-01-31 17:49:49.138669", "failed_when_result": true, "msg": "non-zero return code", "rc": 1, "start": "2026-01-31 17:49:47.545411", "stderr": "Error: INSTALLATION FAILED: cannot re-use a name that is still in use", "stderr_lines": ["Error: INSTALLATION FAILED: cannot re-use a name that is still in use"], "stdout": "", "stdout_lines": []}
+
+PLAY RECAP *********************************************************************
+smo-node-1                 : ok=78   changed=19   unreachable=0    failed=1    skipped=62   rescued=0    ignored=0   
+
