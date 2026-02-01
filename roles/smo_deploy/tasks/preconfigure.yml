@@ -2,7 +2,7 @@
 
 - name: Create additional required namespaces
   shell: |
-    microk8s kubectl create namespace {{ item }} || true
+    {{ kubectl_command }} create namespace {{ item }} || true
   loop:
     - network
     - network-simulators  
@@ -14,14 +14,14 @@
   block:
     - name: Create ONAP service account
       shell: |
-        microk8s kubectl create serviceaccount onap-sa -n {{ onap_namespace }} || true
+        {{ kubectl_command }} create serviceaccount onap-sa -n {{ onap_namespace }} || true
       register: onap_sa
       changed_when: "'created' in onap_sa.stdout"
       tags: preconfigure
 
     - name: Create NonRTRIC service account
       shell: |
-        microk8s kubectl create serviceaccount nonrtric-sa -n {{ onap_namespace }} || true
+        {{ kubectl_command }} create serviceaccount nonrtric-sa -n {{ onap_namespace }} || true
       register: nonrtric_sa
       changed_when: "'created' in nonrtric_sa.stdout"
       tags: preconfigure
@@ -33,7 +33,7 @@
   block:
     - name: Create cluster role for SMO components
       shell: |
-        cat <<EOF | microk8s kubectl apply -f -
+        cat <<EOF | {{ kubectl_command }} apply -f -
         apiVersion: rbac.authorization.k8s.io/v1
         kind: ClusterRole
         metadata:
@@ -52,7 +52,7 @@
 
     - name: Bind cluster role to service accounts
       shell: |
-        microk8s kubectl create clusterrolebinding smo-{{ item }}-binding \
+        {{ kubectl_command }} create clusterrolebinding smo-{{ item }}-binding \
           --clusterrole=smo-cluster-role \
           --serviceaccount={{ onap_namespace }}:{{ item }} || true
       loop:
@@ -69,24 +69,34 @@
   block:
     - name: Create ONAP credentials secret
       shell: |
-        microk8s kubectl create secret generic onap-credentials \
+        {{ kubectl_command }} create secret generic onap-credentials \
           -n {{ onap_namespace }} \
           --from-literal=admin-password='{{ onap_admin_password }}' \
           --from-literal=db-root-password='{{ onap_db_root_password }}' \
           --from-literal=db-password='{{ onap_db_password }}' \
-          --dry-run=client -o yaml | microk8s kubectl apply -f -
+          --dry-run=client -o yaml | {{ kubectl_command }} apply -f -
       register: onap_secret
       changed_when: "'created' in onap_secret.stdout or 'configured' in onap_secret.stdout"
       tags: preconfigure
 
     - name: Create NonRTRIC credentials secret (if needed)
       shell: |
-        microk8s kubectl create secret generic nonrtric-credentials \
+        {{ kubectl_command }} create secret generic nonrtric-credentials \
           -n {{ onap_namespace }} \
           --from-literal=admin-password='{{ onap_admin_password }}' \
-          --dry-run=client -o yaml | microk8s kubectl apply -f -
+          --dry-run=client -o yaml | {{ kubectl_command }} apply -f -
       register: nonrtric_secret
       changed_when: "'created' in nonrtric_secret.stdout or 'configured' in nonrtric_secret.stdout"
+      tags: preconfigure
+
+    - name: Create MariaDB root password secret
+      shell: |
+        {{ kubectl_command }} create secret generic onap-mariadb-galera-db-root-password \
+          -n {{ onap_namespace }} \
+          --from-literal=password='{{ onap_db_root_password }}' \
+          --dry-run=client -o yaml | {{ kubectl_command }} apply -f -
+      register: db_root_secret
+      changed_when: "'created' in db_root_secret.stdout or 'configured' in db_root_secret.stdout"
       tags: preconfigure
 
   when: setup_secrets
@@ -98,11 +108,12 @@
       command: microk8s enable storage
       register: storage_enable
       changed_when: "'Enabling' in storage_enable.stdout"
+      when: cluster_type == 'microk8s'
       tags: preconfigure
 
     - name: Create PVC for ONAP data (if needed)
       shell: |
-        cat <<EOF | microk8s kubectl apply -f -
+        cat <<EOF | {{ kubectl_command }} apply -f -
         apiVersion: v1
         kind: PersistentVolumeClaim
         metadata:
@@ -114,7 +125,7 @@
           resources:
             requests:
               storage: 10Gi
-          storageClassName: microk8s-hostpath
+          storageClassName: {{ storage_class | default('microk8s-hostpath') }}
         EOF
       register: pvc_create
       changed_when: "'created' in pvc_create.stdout or 'configured' in pvc_create.stdout"
@@ -128,20 +139,142 @@
   block:
     - name: Get all nodes
       shell: |
-        microk8s kubectl get nodes -o jsonpath='{.items[*].metadata.name}'
+        {{ kubectl_command }} get nodes -o jsonpath='{.items[*].metadata.name}'
       register: k8s_nodes
       changed_when: false
       tags: preconfigure
 
     - name: Label nodes for SMO workloads
       shell: |
-        microk8s kubectl label nodes {{ item }} smo-node=true --overwrite
+        {{ kubectl_command }} label nodes {{ item }} smo-node=true --overwrite
       loop: "{{ k8s_nodes.stdout.split() }}"
       register: node_label
       changed_when: "'labeled' in node_label.stdout"
       tags: preconfigure
 
+- name: Install OpenEBS operator (required for storage)
+  shell: |
+    helm upgrade --install openebs --namespace openebs openebs/openebs \
+      --version 4.3.0 \
+      --create-namespace \
+      --set engines.replicated.mayastor.enabled=false \
+      --set engines.local.lvm.enabled=false \
+      --set engines.local.zfs.enabled=false \
+      --set loki.enabled=false \
+      --set alloy.enabled=false \
+      --set global.imageRegistry=nexus3.o-ran-sc.org:10001 \
+      --set preUpgradeHook.image.registry=nexus3.o-ran-sc.org:10001 \
+      --set preUpgradeHook.image.repo=bitnamilegacy/kubectl \
+      --no-hooks \
+      --timeout 600s
+
+- name: Wait for OpenEBS Deployment to be created
+  shell: kubectl get deployment -n openebs openebs-localpv-provisioner
+  register: deploy_check
+  until: deploy_check.rc == 0
+  retries: 20
+  delay: 5
+  ignore_errors: yes
+
+- name: Patch OpenEBS to remove liveness probe
+  shell: |
+    kubectl patch deployment openebs-localpv-provisioner -n openebs --type='json' -p='[{"op": "remove", "path": "/spec/template/spec/containers/0/livenessProbe"}]'
+  ignore_errors: yes
+
+- name: Wait for OpenEBS Rollout
+  shell: kubectl rollout status deployment/openebs-localpv-provisioner -n openebs --timeout=300s
+  ignore_errors: yes
+  register: openebs_install
+  failed_when: openebs_install.rc != 0
+  tags: 
+    - preconfigure
+    - openebs
+
+- name: Install MariaDB operator
+  block:
+    - name: Create MariaDB operator namespace
+      shell: |
+        {{ kubectl_command }} create namespace mariadb-operator || true
+      tags: preconfigure
+
+    - name: Adopt existing MariaDB CRDs if they exist
+      shell: |
+        for crd in $(kubectl get crd -o name | grep mariadb.com); do
+          kubectl label $crd app.kubernetes.io/managed-by=Helm --overwrite
+          kubectl annotate $crd meta.helm.sh/release-name=mariadb-operator-crds --overwrite
+          kubectl annotate $crd meta.helm.sh/release-namespace=mariadb-operator --overwrite
+        done
+      failed_when: false
+      tags: preconfigure
+
+    - name: Install MariaDB operator CRDs
+      shell: |
+        helm upgrade --install mariadb-operator-crds mariadb-operator/mariadb-operator-crds -n mariadb-operator --wait
+      tags: preconfigure
+
+    - name: Install MariaDB operator
+      shell: |
+        helm upgrade --install mariadb-operator mariadb-operator/mariadb-operator -n mariadb-operator --wait
+      tags: preconfigure
+  when: deploy_onap  # MariaDB is required by ONAP components in this setup
+  tags: 
+    - preconfigure
+    - mariadb
+
+- name: Create SMO storage class (if not present)
+  shell: |
+    cat <<EOF | {{ kubectl_command }} apply -f -
+    apiVersion: storage.k8s.io/v1
+    kind: StorageClass
+    metadata:
+      annotations:
+        cas.openebs.io/config: |
+          - name: StorageType
+            value: "hostpath"
+          - name: BasePath
+            value: "/var/openebs/local"
+      name: smo-storage
+    provisioner: openebs.io/local
+    reclaimPolicy: Delete
+    volumeBindingMode: WaitForFirstConsumer
+    allowVolumeExpansion: true
+    EOF
+  register: smo_sc_create
+  changed_when: "'created' in smo_sc_create.stdout or 'configured' in smo_sc_create.stdout"
   tags: preconfigure
+
+- name: Install Strimzi Kafka Operator
+  shell: |
+    helm upgrade --install strimzi-kafka-operator strimzi/strimzi-kafka-operator \
+      --namespace strimzi-system \
+      --version 0.45.0 \
+      --set watchAnyNamespace=true \
+      --create-namespace \
+      --wait
+  when: deploy_onap
+  tags: 
+    - preconfigure
+    - strimzi
+
+- name: Copy Policy KafkaUser wildcard fix
+  copy:
+    src: policy-user-fix-wildcard.yaml
+    dest: /tmp/policy-user-fix-wildcard.yaml
+    mode: '0644'
+  when: deploy_onap
+  tags:
+    - preconfigure
+    - strimzi
+
+- name: Apply Policy KafkaUser wildcard fix
+  shell: |
+    {{ kubectl_command }} apply -f /tmp/policy-user-fix-wildcard.yaml -n {{ onap_namespace }}
+  register: policy_fix
+  changed_when: "'configured' in policy_fix.stdout or 'created' in policy_fix.stdout"
+  when: deploy_onap
+  tags:
+    - preconfigure
+    - strimzi
 
 - name: Display pre-configuration summary
   debug:
@@ -151,4 +284,5 @@
       - "RBAC: {{ 'Configured' if create_rbac else 'Skipped' }}"
       - "Secrets: {{ 'Created' if setup_secrets else 'Skipped' }}"
       - "Storage: {{ 'Configured' if configure_persistent_storage else 'Skipped' }}"
+      - "Infrastructure: OpenEBS, MariaDB, Strimzi"
   tags: preconfigure

@@ -179,6 +179,8 @@
     helm_repo_suffix: "{{ '-staging' if deployment_mode == 'snapshot' else '' }}"
   tags: install
 
+# Strimzi Kafka Operator is now installed in preconfigure.yml
+
 - name: Deploy ONAP components
   shell: |
     {% if use_chartmuseum %}

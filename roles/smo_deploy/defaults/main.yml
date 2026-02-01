@@ -35,9 +35,15 @@ helm_repos:
   - name: bitnami
     url: https://charts.bitnami.com/bitnami
   - name: onap
-    url: https://nexus.onap.org/content/sites/oom-helm-prod
+    url: https://nexus3.onap.org/repository/onap-helm-release/
   - name: oran
-    url: https://nexus.o-ran-sc.org/content/sites/helm-prod
+    url: https://nexus3.o-ran-sc.org/repository/helm.release/
+  - name: strimzi
+    url: https://strimzi.io/charts/
+  - name: openebs
+    url: https://openebs.github.io/openebs
+  - name: mariadb-operator
+    url: https://helm.mariadb.com/mariadb-operator
 
 # Git Repository Configuration
 it_dep_repo: "https://gerrit.o-ran-sc.org/r/it/dep"
@@ -110,7 +116,7 @@ min_memory_gb: 32
 min_disk_gb: 100
 
 # Network Configuration
-external_ip: ""  # Leave empty for auto-detection
+external_ip: "10.200.105.60"  # Explicitly set to server public IP
 ingress_enabled: true
 
 # Timeouts (in seconds)
@@ -118,9 +124,6 @@ helm_timeout: 3600
 pod_ready_timeout: 1800
 
 # Override files
-smo_override_file: ""
-onap_override_file: ""
-nonrtric_override_file: ""
 
 # Cleanup options
 cleanup_on_failure: false

@@ -41,8 +41,7 @@
 
 - name: Parse image list
   set_fact:
-    images_to_pull: "{{ (image_list_content.content | b64decode).split('\n') | select('match', '^[^#].*') | list }}"
-  when: image_list_file.stat.exists
+    images_to_pull: "{{ (image_list_content.content | b64decode).split('\n') | select('match', '^[^#].*') | list if image_list_file.stat.exists else [] }}"
   tags: prepull
 
 - name: Display number of images to pull
@@ -58,7 +57,7 @@
 
 - name: Check already pulled images
   shell: |
-    microk8s ctr images ls -q | grep "{{ item }}" || echo "not-found"
+    {{ ctr_command }} images ls -q | grep "{{ item }}" || echo "not-found"
   register: existing_images
   loop: "{{ images_to_pull }}"
   changed_when: false
@@ -84,7 +83,7 @@
     echo "Pulling image: $image"
     
     # Try with microk8s first
-    if timeout {{ image_pull_timeout }} microk8s ctr images pull "$image" 2>&1; then
+    if timeout {{ image_pull_timeout }} {{ ctr_command }} images pull "$image" 2>&1; then
       echo "Successfully pulled $image with microk8s ctr"
       echo "$image" >> /tmp/smo-image-pull/success.log
     else
@@ -158,7 +157,7 @@
 
 - name: Verify critical images are present
   shell: |
-    microk8s ctr images ls | grep -E "(onap|oran|policy|aai|sdc|sdnc)" | wc -l
+    {{ ctr_command }} images ls | grep -E "(onap|oran|policy|aai|sdc|sdnc)" | wc -l
   register: critical_images
   changed_when: false
   tags: prepull

@@ -1,0 +1,44 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaUser
+metadata:
+  labels:
+    app.kubernetes.io/name: policy-clamp-ac-k8s-ppnt
+    helm.sh/chart: policy-clamp-ac-k8s-ppnt-16.0.2
+    strimzi.io/cluster: onap-strimzi
+    version: 16.0.2
+  name: policy-clamp-ac-k8s-ppnt-ku
+  namespace: onap
+spec:
+  authentication:
+    type: scram-sha-512
+  authorization:
+    type: simple
+    acls:
+    - operations:
+      - Read
+      resource:
+        name: '*'
+        patternType: literal
+        type: group
+    - operations:
+      - Read
+      - Write
+      resource:
+        name: policy-acruntime-participant
+        patternType: literal
+        type: topic
+    - operations:
+      - Read
+      - Write
+      resource:
+        name: acm-ppnt-sync
+        patternType: literal
+        type: topic
+    - operations:
+      - Read
+      - Write
+      resource:
+        name: '*'
+        patternType: literal
+        type: topic
+

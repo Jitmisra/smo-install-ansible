@@ -13,17 +13,17 @@
     - cluster
     - deploy
 
+- name: Include Helm preparation tasks
+  include_tasks: helm_prep.yml
+  tags:
+    - helm
+    - deploy
+
 - name: Include pre-configuration tasks
   include_tasks: preconfigure.yml
   tags:
     - preconfigure
     - config
-    - deploy
-
-- name: Include Helm preparation tasks
-  include_tasks: helm_prep.yml
-  tags:
-    - helm
     - deploy
 
 - name: Include image pre-pull tasks

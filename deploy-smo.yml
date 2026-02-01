@@ -6,7 +6,7 @@
   
   vars:
     # Override default variables here
-    external_ip: "192.168.1.100"  # Change to your server IP
+    external_ip: "10.200.105.60"  # Change to your server IP
     onap_namespace: "onap"
     
     # Deployment configuration
@@ -27,6 +27,7 @@
     # Pre and Post configuration
     configure_integration: true
     run_smoke_tests: false
+    cleanup_on_failure: false
   
   roles:
     - role: smo_deploy

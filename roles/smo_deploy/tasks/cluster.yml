@@ -59,6 +59,7 @@
     - metallb:{{ smo_external_ip }}-{{ smo_external_ip }}
   register: addon_result
   changed_when: "'Enabling' in addon_result.stdout or 'enabled' in addon_result.stdout"
+  when: cluster_type == 'microk8s'
   tags: cluster
 
 - name: Create kubectl alias
@@ -66,6 +67,7 @@
     path: "{{ ansible_env.HOME }}/.bashrc"
     line: "alias kubectl='microk8s kubectl'"
     create: yes
+  when: cluster_type == 'microk8s'
   tags: cluster
 
 - name: Export kubeconfig
@@ -73,11 +75,12 @@
     microk8s config > {{ ansible_env.HOME }}/.kube/config
   args:
     creates: "{{ ansible_env.HOME }}/.kube/config"
+  when: cluster_type == 'microk8s'
   tags: cluster
 
 - name: Wait for all system pods to be ready
   shell: |
-    microk8s kubectl wait --for=condition=Ready pods --all -n kube-system --timeout=600s
+    {{ kubectl_command }} wait --for=condition=Ready pods --all -n kube-system --timeout=600s
   register: pods_ready
   retries: 5
   delay: 30
@@ -86,14 +89,14 @@
 
 - name: Create ONAP namespace
   shell: |
-    microk8s kubectl create namespace {{ onap_namespace }}
+    {{ kubectl_command }} create namespace {{ onap_namespace }}
   register: ns_result
   failed_when: ns_result.rc != 0 and 'AlreadyExists' not in ns_result.stderr
   changed_when: ns_result.rc == 0
   tags: cluster
 
 - name: Display cluster status
-  command: microk8s kubectl get nodes
+  command: "{{ kubectl_command }} get nodes"
   register: nodes_status
   changed_when: false
   tags: cluster
